@@ -4,88 +4,179 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+last_left_line = []
+last_right_line = []
+left_slope_buffer = []
+right_slope_buffer = []
+lane_width_buffer = []
+
+
 def make_coordinates(image, line_parameters):
     slope, intercept = line_parameters
-    y1 = image.shape[0]
-    y2 = int(y1*(3/5))
+    y1 = image.shape[0] - 100
+    y2 = int(y1*(3.75/5))
     x1 = int((y1 - intercept) / slope)
     x2 = int((y2 - intercept) / slope)
     
     return np.array([x1, y1, x2, y2])
 
-def average_slope_intercept(image, lines):
+def average_slope_intercept(image, lines, last_center):
     left_fit = []
     right_fit = []
-    for line in lines:
-        x1, y1, x2, y2 = line.reshape(4)
-        parameters = np.polyfit((x1, x2), (y1, y2), 1)
-        slope = parameters[0]
-        intercept = parameters[1]
-        if slope < 0:
-            left_fit.append((slope, intercept))
+    if(lines is not None):
+        for line in lines:
+            x1, y1, x2, y2 = line.reshape(4)
+            parameters = np.polyfit((x1, x2), (y1, y2), 1)
+            slope = parameters[0]
+            intercept = parameters[1]
+            if slope < -0.5:
+                left_fit.append((slope, intercept))
+            elif slope > 0.5:
+                right_fit.append((slope, intercept))
+
+        global last_left_line
+        global last_right_line
+
+        global left_slope_buffer
+        global right_slope_buffer
+
+        if(len(left_fit) == 0):
+            left_line = last_left_line
         else:
-            right_fit.append((slope, intercept))
+            left_fit_average = np.average(left_fit, axis = 0)
+            left_slope_buffer.append(left_fit_average)
+            left_fit_average = np.average(left_slope_buffer, axis=0)
+            if(len(left_slope_buffer) > 30):
+                left_slope_buffer.pop(0)
 
-    left_fit_average = np.average(left_fit, axis = 0)
-    right_fit_average = np.average(right_fit, axis = 0)
-    left_line = make_coordinates(image, left_fit_average)
-    right_line = make_coordinates(image, right_fit_average)
-
-    return np.array([left_line, right_line])
+            left_line = make_coordinates(image, left_fit_average)
+            last_left_line = left_line
+    
+        if(len(right_fit) == 0):
+            right_line = last_right_line
+        else:
+            right_fit_average = np.average(right_fit, axis = 0)
+            right_slope_buffer.append(right_fit_average)
+            right_fit_average = np.average(right_slope_buffer, axis = 0)
+            if(len(right_slope_buffer) > 30):
+                right_slope_buffer.pop(0)
             
+            right_line = make_coordinates(image, right_fit_average)
+            
+            last_right_line = right_line
+
+        this_lane_width = right_line[0] - left_line[0]
+
+        lane_width_buffer.append(this_lane_width)
+        lane_width_avg = np.average(lane_width_buffer, axis=0)
+       
+        if(len(lane_width_buffer) > 30):
+            lane_width_buffer.pop(0)
+    
+        delta = int((lane_width_avg - this_lane_width) / 2)
+
+        left_line = np.array([left_line[0] - delta, left_line[1], left_line[2], left_line[3]])
+        right_line = np.array([right_line[0] + delta, right_line[1], right_line[2], right_line[3]])
+      
+        return np.array([left_line, right_line])
+    else:
+        return np.array([last_left_line, last_right_line])
+
 def display_lines(image, lines):
     line_image = np.zeros_like(image)
     if lines is not None:
         for x1, y1, x2, y2 in lines:
-            cv2.line(line_image, (x1, y1), (x2, y2), (255, 0, 0), 10)
+            cv2.line(line_image, (x1, y1), (x2, y2), (0, 255, 0), 5)
             
     return line_image
+
+def display_region(image, lines):
+    line_image = np.zeros_like(image)
+    if lines is not None:
+        x11, y11, x12, y12 = lines[0].reshape(4)
+        x21, y21, x22, y22 = lines[1].reshape(4)
+                
+        polygons = np.array([[
+             [x11, y11], [x21, y21],
+             [x22, y22], [x12, y12]]])
+
+        cv2.fillPoly(line_image, polygons, (0,255, 0))
+
+    return line_image
         
-def canny(image):
+def display_all_lines(image, lines):
+    line_image = np.zeros_like(image)
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line.reshape(4)
+            parameters = np.polyfit((x1, x2), (y1, y2), 1)
+            slope = parameters[0]
+            if(slope > 0.5 or slope < -0.5):
+                cv2.line(line_image, (x1, y1), (x2, y2), (0, 0, 255), 5)
+            
+    return line_image
+
+def detect_cars(image):
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-    blur = cv2.GaussianBlur(gray, (5,5), 0)
+    cars = car_cascade.detectMultiScale(gray, 1.1, 1)     
+    for (x, y, w, h) in cars:
+        cv2.rectangle(image, (x,y), (x+w,y+h), (0,0,255), 2)
+
+def canny(image):
+   # gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    blur = cv2.GaussianBlur(image, (5,5), 0)
     canny = cv2.Canny(blur, 50, 150)
     return canny
     
-def region_of_interest(image, left, right, top):
-    height = image.shape[0]
+def region_of_interest(image, left, right, top, center, bottom_margin, x_top_offset):
+    bottom = image.shape[0] - bottom_margin
+    center = last_center
+
+    height = bottom - top
     polygons = np.array([
-            [(200, height), (1100, height), (550, 250)]
+            [(left, bottom), (right, bottom), (center + x_top_offset, height), (center - x_top_offset, height)]
         ])
     mask = np.zeros_like(image)
-    cv2.fillPoly(mask, polygons, 255)
+    cv2.fillPoly(mask, polygons, (255, 255, 255))
     masked_image = cv2.bitwise_and(image, mask)
     return masked_image
 
-#image = cv2.imread('test_image.jpg')
-#lane_image = np.copy(image)
-#canny = canny(lane_image)
-#cropped_image = region_of_interest(canny, 200, 1100, 250)
-# use to identify regions of image we care about
-# plt.imshow(canny)
-# plt.show()
+car_cascade = cv2.CascadeClassifier('.\\data\\cars.xml')
+cap = cv2.VideoCapture("project_video.mp4")
 
-#min_points_line = 100
+last_center = 640
 
-#lines = cv2.HoughLinesP(cropped_image, 2, np.pi / 180, min_points_line, np.array([]), minLineLength=40, maxLineGap=5)
-
-#averaged_lines = average_slope_intercept(lane_image, lines)
-
-#line_image = display_lines(lane_image, averaged_lines)
-#combo_image = cv2.addWeighted(lane_image, 0.8, line_image, 1, 1)
-
-cap = cv2.VideoCapture("test2.mp4")
 while(cap.isOpened()):
-    _, frame = cap.read()
-    canny_image = canny(frame)
-    cropped_image = region_of_interest(canny_image, 200, 1100, 250)
-    lines = cv2.HoughLinesP(cropped_image, 2, np.pi / 180, 100, np.array([]), minLineLength=40, maxLineGap=5)
-    averaged_lines = average_slope_intercept(frame, lines)
-    line_image = display_lines(frame, averaged_lines)
-    combo_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
-    cv2.imshow('Result', combo_image)
+    try:
+        ret, frame = cap.read()
+        if(ret):
+            canny_image = canny(cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY))
+            cropped_image = region_of_interest(canny_image, 300, 1115, 130, last_center, 130, 55)
+            cropped_frame = region_of_interest(frame, 300, 1100, 225, last_center, 60, 55)
+            lines = cv2.HoughLinesP(cropped_image, 2, np.pi / 180, 40, np.array([]), minLineLength=5, maxLineGap=2)
+            averaged_lines = average_slope_intercept(frame, lines, last_center)
+            avg_line_image = display_region(frame, averaged_lines)
+            line_image = display_all_lines(frame, lines)
+            averageX = int((averaged_lines[0][2] + averaged_lines[1][2]) / 2)
+            last_center = averageX
 
-    if cv2.waitKey(1) == ord('q'):
+            cross_y = 600
+            cross_diameter = 25
+
+            combo_image = cv2.addWeighted(avg_line_image, 0.25, frame, 1, 1)
+            combo_image = cv2.addWeighted(line_image, 0.98, combo_image, 1, 1)
+            cv2.line(combo_image, (averageX, cross_y + cross_diameter), (averageX, cross_y - cross_diameter), (0, 0, 255), 2)
+            cv2.line(combo_image, (averageX - cross_diameter, cross_y), (averageX + cross_diameter, cross_y), (0, 0, 255), 2)
+          #  detect_cars(combo_image)
+            cv2.imshow('Result', combo_image)
+        else:
+            print("End of Video")
+            break
+        if cv2.waitKey(1) == ord('q'):
+            break
+    
+    except KeyboardInterrupt:
+        print("^C received, shutting down.")
         break
 
 cap.release()
