@@ -1,90 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
+    android:background="#FFFFFF"
+    android:rowCount="6"
+    android:columnCount="5"
     tools:context=".FullscreenActivity">
 
+    <LinearLayout android:layout_column="2"
+                  android:layout_height="100dp"
+                  android:layout_width="200dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/lidar_lbl"
+                    android:text="0,0"
+                    android:textSize="25dp"
+                    android:textColor="#FFFFFF" />
+    </LinearLayout>
 
-    <FrameLayout
-        android:layout_width="match_parent"
+    <ProgressBar
+        android:layout_column="2"
+        android:layout_row="0"
+        android:id="@+id/lidar"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="80dp"
+        android:layout_gravity="center"
+        android:rotation="90" />
+
+    <LinearLayout
+        android:layout_row="1"
+        android:layout_column="1"
+        android:layout_height="250dp"
+        android:layout_width="200dp">
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_row="1"
+        android:layout_column="3"
+        android:layout_height="250dp"
+        android:layout_width="200dp">
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_rowSpan="5"
+        android:layout_row="0"
+        android:layout_column="4"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_width="200dp">
+    </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:orientation="vertical"
-            android:layout_margin="10dp"
-            tools:ignore="UselessParent">
+    <LinearLayout
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        android:layout_row="0"
+        android:layout_rowSpan="5"
+        android:layout_column="0"></LinearLayout>
 
-         <LinearLayout
-             android:id="@+id/parking_view"
-             android:orientation="vertical"
-             android:visibility="gone"
-             android:layout_width="match_parent"
-             android:layout_height="wrap_content">
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="400dp"
+        android:layout_row="1"
+        android:layout_rowSpan="3"
+        android:layout_column="2"
+
+        android:alignmentMode="alignBounds"
+        android:columnOrderPreserved="false"
+        android:src="@drawable/topview"
+        android:useDefaultMargins="true" />
+
              <ProgressBar
-                 android:id="@+id/pk_sensor1"
+                 android:id="@+id/pk_sensorDN"
                  style="@android:style/Widget.ProgressBar.Horizontal"
                  android:max="255"
-                 android:layout_width="match_parent"
-                 android:layout_height="25dp" />
+                 android:rotation="180"
+                 android:layout_row="2"
+                 android:layout_column="1"
+                 android:layout_width="80dp"
+                 android:layout_gravity="end" />
+
+             <TextView
+                 android:layout_width="200dp"
+                 android:layout_marginTop="25dp"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/pk_sensorDM_lbl"
+                 android:layout_row="2"
+                 android:layout_column="1"
+                 android:text="empty"
+                 android:textAlignment="textEnd"
+                 android:textSize="25dp"
+                 android:textColor="#FFFFFF" />
+
+             <ProgressBar
+                 android:id="@+id/pk_sensorDB"
+                 style="@android:style/Widget.ProgressBar.Horizontal"
+                 android:max="255"
+                 android:layout_row="3"
+                 android:rotation="180"
+                 android:layout_column="1"
+                 android:layout_width="80dp"
+                 android:layout_gravity="end" />
+             <TextView
+                 android:layout_width="200dp"
+                 android:layout_height="wrap_content"
+                 android:layout_row="3"
+                 android:layout_marginTop="25dp"
+                 android:textAlignment="textEnd"
+                 android:layout_column="1"
+                 android:id="@+id/pk_sensorDB_lbl"
+                 android:text="empty"
+                 android:textSize="25dp"
+                 android:textColor="#FFFFFF" />
+
+    <ProgressBar
+        android:id="@+id/pk_sensorPM"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="80dp"
+        android:layout_row="2"
+        android:layout_column="3"
+        android:max="255" />
              <TextView
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 android:id="@+id/pk_sensor1_lbl"
-                 android:text="0"
+                 android:id="@+id/pk_sensorPM_lbl"
+                 android:layout_row="2"
+                 android:layout_column="3"
+                 android:layout_marginTop="25dp"
+                 android:text="empty"
                  android:textSize="25dp"
                  android:textColor="#FFFFFF" />
              <ProgressBar
-                 android:id="@+id/pk_sensor2"
-                 style="@android:style/Widget.ProgressBar.Horizontal"
+                 android:id="@+id/pk_sensorPB"
                  android:max="255"
-                 android:layout_width="match_parent"
-                 android:layout_height="25dp" />
+                 style="@android:style/Widget.ProgressBar.Horizontal"
+                 android:layout_row="3"
+                 android:layout_column="3"
+                 android:layout_width="80dp" />
              <TextView
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 android:id="@+id/pk_sensor2_lbl"
-                 android:text="0"
+                 android:id="@+id/pk_sensorPB_lbl"
+                 android:layout_row="3"
+                 android:layout_column="3"
+                 android:layout_marginTop="25dp"
+                 android:text="empty"
                  android:textSize="25dp"
                  android:textColor="#FFFFFF" />
              <ProgressBar
-                 android:id="@+id/pk_sensor3"
-                 style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:max="255"
-                 android:layout_width="match_parent"
-                 android:layout_height="25dp" />
-             <TextView
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:id="@+id/pk_sensor3_lbl"
-                 android:text="0"
-                 android:textSize="25dp"
-                 android:textColor="#FFFFFF" />
-             <ProgressBar
-                 android:id="@+id/pk_sensor4"
+                 android:id="@+id/pk_sensorDR"
                  android:max="255"
                  style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="match_parent"
-                 android:layout_height="25dp" />
-             <TextView
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:id="@+id/pk_sensor4_lbl"
-                 android:text="0"
-                 android:textSize="25dp"
-                 android:textColor="#FFFFFF" />
-             <ProgressBar
-                 android:id="@+id/pk_sensor5"
-                 android:max="255"
-                 style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="match_parent"
-                 android:layout_height="25dp" />
-             <TextView
+                 android:layout_row="4"
+                 android:layout_column="2"
+                 android:rotation="90"
+                 android:layout_gravity="center_vertical"
+                 android:layout_width="80dp"/>
+
+    <ProgressBar
+        android:id="@+id/pk_sensorPR"
+        style="@android:style/Widget.ProgressBar.Horizontal"
+        android:layout_width="80dp"
+        android:layout_row="4"
+        android:layout_column="2"
+        android:layout_gravity="end|center_vertical"
+        android:max="255"
+        android:progress="120"
+        android:progressBackgroundTint="@android:color/transparent"
+        android:progressTint="@android:color/holo_blue_dark"
+        android:rotation="90" />
+          <!--   <TextView
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
                  android:id="@+id/pk_sensor5_lbl"
@@ -95,7 +180,7 @@
                  android:id="@+id/pk_sensor6"
                  android:max="255"
                  style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="match_parent"
+                 android:layout_width="50dp"
                  android:layout_height="25dp" />
              <TextView
                  android:layout_width="wrap_content"
@@ -104,48 +189,38 @@
                  android:text="0"
                  android:textSize="25dp"
                  android:textColor="#FFFFFF" />
-             <ProgressBar
+            <ProgressBar
                  android:id="@+id/pk_sensor7"
                  android:max="255"
+                 android:layout_column="3"
+                android:layout_row="2"
                  style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="match_parent"
+                 android:layout_width="200dp"
                  android:layout_height="25dp" />
              <TextView
-                 android:layout_width="wrap_content"
+                 android:layout_width="200dp"
                  android:layout_height="wrap_content"
                  android:id="@+id/pk_sensor7_lbl"
-                 android:text="0"
+                 android:layout_marginTop="25dp"
+                 android:text="Empty - no data"
+                 android:layout_column="3"
+                 android:layout_row="2"
                  android:textSize="25dp"
                  android:textColor="#FFFFFF" />
-             <ProgressBar
-                 android:id="@+id/pk_sensor8"
-                 android:max="255"
-                 style="@android:style/Widget.ProgressBar.Horizontal"
-                 android:layout_width="match_parent"
-                 android:layout_height="25dp" />
+
+
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_column="3"
+                android:layout_row="3"
+                android:layout_width="200dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/pk_sensor8_lbl"
-                android:text="0"
+                android:id="@+id/pk_sensorBR_lbl"
+                android:layout_marginTop="25dp"
+                android:text="Empty - no data"
                 android:textSize="25dp"
-                android:textColor="#FFFFFF" />
-            <ProgressBar
-                android:id="@+id/lidar"
-                android:layout_width="match_parent"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_height="25dp" />
-             <TextView
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:id="@+id/lidar_lbl"
-                 android:text="0,0"
-                 android:textSize="25dp"
-                 android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF" />-->
 
-
-         </LinearLayout>
-
+<!--
         <LinearLayout
             android:id="@+id/device_search_view"
             android:orientation="vertical"
@@ -165,9 +240,5 @@
                 android:layout_width="match_parent"
                 android:layout_weight="9"
                 android:layout_height="0dp"/>
-        </LinearLayout>
-        </LinearLayout>
-
-    </FrameLayout>
-
-</FrameLayout>
+        </LinearLayout>-->
+</GridLayout>
