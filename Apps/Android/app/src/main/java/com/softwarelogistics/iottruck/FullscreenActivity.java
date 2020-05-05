@@ -3,7 +3,6 @@ package com.softwarelogistics.iottruck;
 import android.Manifest;
 import android.annotation.SuppressLint;
 
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -14,22 +13,36 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.softwarelogistics.iottruck.controls.MjpegView;
+import com.softwarelogistics.iottruck.services.MjpegInputStream;
+
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -40,23 +53,23 @@ public class FullscreenActivity extends AppCompatActivity {
     BluetoothService mBluetoothService;
     BluetoothDeviceAdapter bluetoothDevicesAdapter;
 
-    LinearLayout mParkingView;
-    ProgressBar pkSensor1;
-    ProgressBar pkSensor2;
-    ProgressBar pkSensor3;
-    ProgressBar pkSensor4;
-    ProgressBar pkSensor5;
-    ProgressBar pkSensor6;
+    GridLayout mParkingView;
+    ProgressBar pkSensorDM;
+    ProgressBar pkSensorDB;
+    ProgressBar pkSensorDR;
+    ProgressBar pkSensorPR;
+    ProgressBar pkSensorPB;
+    ProgressBar pkSensorPM;
     ProgressBar pkSensor7;
     ProgressBar pkSensor8;
     ProgressBar lidar;
 
-    TextView txtSensor1;
-    TextView txtSensor2;
-    TextView txtSensor3;
-    TextView txtSensor4;
-    TextView txtSensor5;
-    TextView txtSensor6;
+    TextView txtSensorDM;
+    TextView txtSensorDB;
+    TextView txtSensorDR;
+    TextView txtSensorPR;
+    TextView txtSensorPB;
+    TextView txtSensorPM;
     TextView txtSensor7;
     TextView txtSensor8;
     TextView txtLidar;
@@ -64,6 +77,9 @@ public class FullscreenActivity extends AppCompatActivity {
     LinearLayout mDeviceSearchView;
     Button mSearchNow;
     ListView mDeviceList;
+
+    WebView m_webViewLeft;
+    WebView m_webViewRight;
 
     public static String TAG = "IOTTRUCK.ParkingSensor";
 
@@ -118,28 +134,36 @@ public class FullscreenActivity extends AppCompatActivity {
             }
         });
 
-        mParkingView = findViewById(R.id.parking_view);
+        mParkingView = findViewById(R.id.drive_view);
 
-        pkSensor1 = findViewById(R.id.pk_sensor1);
-        pkSensor2 = findViewById(R.id.pk_sensor2);
-        pkSensor3 = findViewById(R.id.pk_sensor3);
-        pkSensor4 = findViewById(R.id.pk_sensor4);
-        pkSensor5 = findViewById(R.id.pk_sensor5);
-        pkSensor6 = findViewById(R.id.pk_sensor6);
-        pkSensor7 = findViewById(R.id.pk_sensor7);
-        pkSensor8 = findViewById(R.id.pk_sensor8);
+        pkSensorDM = findViewById(R.id.pk_sensorDM);
+        pkSensorDB = findViewById(R.id.pk_sensorDB);
+        pkSensorDR = findViewById(R.id.pk_sensorDR);
+        pkSensorPR = findViewById(R.id.pk_sensorPR);
+        pkSensorPB = findViewById(R.id.pk_sensorPB);
+        pkSensorPM = findViewById(R.id.pk_sensorPM);
         lidar = findViewById(R.id.lidar);
 
-        txtSensor1 = findViewById(R.id.pk_sensor1_lbl);
-        txtSensor2 = findViewById(R.id.pk_sensor2_lbl);
-        txtSensor3 = findViewById(R.id.pk_sensor3_lbl);
-        txtSensor4 = findViewById(R.id.pk_sensor4_lbl);
-        txtSensor5 = findViewById(R.id.pk_sensor5_lbl);
-        txtSensor6 = findViewById(R.id.pk_sensor6_lbl);
-        txtSensor7 = findViewById(R.id.pk_sensor7_lbl);
-        txtSensor8 = findViewById(R.id.pk_sensor8_lbl);
+        txtSensorDM = findViewById(R.id.pk_sensorDM_lbl);
+        txtSensorDB = findViewById(R.id.pk_sensorDB_lbl);
+        txtSensorDR = findViewById(R.id.pk_sensorDR_lbl);
+        txtSensorPR = findViewById(R.id.pk_sensorPR_lbl);
+        txtSensorPB = findViewById(R.id.pk_sensorPB_lbl);
+        txtSensorPM = findViewById(R.id.pk_sensorPM_lbl);
 
         txtLidar = findViewById(R.id.lidar_lbl);
+
+        m_webViewLeft = findViewById(R.id.webview_left);
+        m_webViewLeft.getSettings().setLoadWithOverviewMode(true);
+        m_webViewLeft.getSettings().setUseWideViewPort(true);
+        m_webViewLeft.loadUrl("http://10.1.1.69:9000/cam0.mjpg");
+
+        m_webViewRight = findViewById(R.id.webview_right);
+        m_webViewRight.getSettings().setLoadWithOverviewMode(true);
+        m_webViewRight.getSettings().setUseWideViewPort(true);
+        m_webViewRight.loadUrl("http://10.1.1.69:9000/cam1.mjpg");
+
+//        new DoRead().execute("http://10.1.1.69:9000/cam0.mjpg");
     }
 
     boolean mHasBluetoothPermissions;
@@ -328,33 +352,33 @@ public class FullscreenActivity extends AppCompatActivity {
                     switch(prm[0]) {
                         case "us000":
                             _pkSensor1 = Float.parseFloat(prm[1]);
-                            pkSensor1.setProgress((int)(_pkSensor1 * 100));
-                            txtSensor1.setText(GetValue(_pkSensor1));
+                            pkSensorDM.setProgress((int)(_pkSensor1 * 100));
+                            txtSensorDM.setText(GetValue(_pkSensor1));
                             break;
                         case "us001":
                             _pkSensor2 = Float.parseFloat(prm[1]);
-                            pkSensor2.setProgress((int)(_pkSensor2 * 100));
-                            txtSensor2.setText(GetValue(_pkSensor2));
+                            pkSensorDB.setProgress((int)(_pkSensor2 * 100));
+                            txtSensorDB.setText(GetValue(_pkSensor2));
                             break;
                         case "us002":
                             _pkSensor3 = Float.parseFloat(prm[1]);
-                            pkSensor3.setProgress((int)(_pkSensor3 * 100));
-                            txtSensor3.setText(GetValue(_pkSensor3));
+                            pkSensorDR.setProgress((int)(_pkSensor3 * 100));
+                            txtSensorDR.setText(GetValue(_pkSensor3));
                             break;
                         case "us003":
                             _pkSensor4 = Float.parseFloat(prm[1]);
-                            pkSensor4.setProgress((int)(_pkSensor4 * 100));
-                            txtSensor4.setText(GetValue(_pkSensor4));
+                            pkSensorPR.setProgress((int)(_pkSensor4 * 100));
+                            txtSensorPR.setText(GetValue(_pkSensor4));
                             break;
                         case "us004":
                             _pkSensor5 = Float.parseFloat(prm[1]);
-                            pkSensor5.setProgress((int)(_pkSensor5 * 100));
-                            txtSensor5.setText(GetValue(_pkSensor5));
+                            pkSensorPB.setProgress((int)(_pkSensor5 * 100));
+                            txtSensorPB.setText(GetValue(_pkSensor5));
                             break;
                         case "us005":
                             _pkSensor6 = Float.parseFloat(prm[1]);
-                            pkSensor6.setProgress((int)(_pkSensor6 * 100));
-                            txtSensor6.setText(GetValue(_pkSensor6));
+                            pkSensorPM.setProgress((int)(_pkSensor6 * 100));
+                            txtSensorPM.setText(GetValue(_pkSensor6));
                             break;
                         case "us006":
                             _pkSensor7 = Float.parseFloat(prm[1]);
@@ -442,7 +466,6 @@ public class FullscreenActivity extends AppCompatActivity {
             }
         }
     };
-
 
     @Override
     public boolean onPrepareOptionsMenu (Menu menu) {
