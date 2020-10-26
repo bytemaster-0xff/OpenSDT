@@ -156,12 +156,12 @@ public class FullscreenActivity extends AppCompatActivity {
         m_webViewLeft = findViewById(R.id.webview_left);
         m_webViewLeft.getSettings().setLoadWithOverviewMode(true);
         m_webViewLeft.getSettings().setUseWideViewPort(true);
-        m_webViewLeft.loadUrl("http://10.1.1.69:9000/cam0.mjpg");
+        m_webViewLeft.loadUrl("http://10.1.1.81:9000/cam0.mjpg");
 
         m_webViewRight = findViewById(R.id.webview_right);
         m_webViewRight.getSettings().setLoadWithOverviewMode(true);
         m_webViewRight.getSettings().setUseWideViewPort(true);
-        m_webViewRight.loadUrl("http://10.1.1.69:9000/cam1.mjpg");
+        m_webViewRight.loadUrl("http://10.1.1.81:9000/cam1.mjpg");
 
 //        new DoRead().execute("http://10.1.1.69:9000/cam0.mjpg");
     }
